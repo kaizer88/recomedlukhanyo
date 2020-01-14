@@ -1,0 +1,69 @@
+image: docker
+
+
+# -------------------------------------------------------------------------------------------
+
+services:
+    - docker:dind
+
+stages:
+    - test
+    - deploy
+
+# -------------------------------------------------------------------------------------------
+
+test_dev:
+    tags:
+        - development
+    stage: test
+    only:
+        - development
+    script:
+        - echo "Testing on development!"
+
+# -------------------------------------------------------------------------------------------
+
+test_master:
+    tags:
+        - master
+    stage: test
+    only:
+        - master
+    script:
+        - echo "Testing on master!"
+
+# -------------------------------------------------------------------------------------------
+# development (DEV), port 8080
+# -------------------------------------------------------------------------------------------
+
+deploy_dev:
+    tags:
+        - development
+        - dev
+    stage: deploy
+    only:
+        - development
+    except:
+        - master
+    script:
+        #Will run these scripts
+        - echo "Deploying to development..."
+        - docker-compose --file docker-compose-dev.yml build --no-cache
+        - COMPOSE_IGNORE_ORPHANS=True docker-compose --file docker-compose-dev.yml up -d
+        - docker-compose --file docker-compose-dev.yml run app_dev /usr/local/bin/python manage.py search_index --rebuild -f
+    environment:
+        name: development
+        url: "URL"
+        
+
+# -------------------------------------------------------------------------------------------
+# master (UAT), port 80
+# -------------------------------------------------------------------------------------------
+
+# Can have something similar to development (DEV)
+
+# -------------------------------------------------------------------------------------------
+# production (PROD), port 80
+# -------------------------------------------------------------------------------------------
+
+# Can have something similar to development (DEV)
